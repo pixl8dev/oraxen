@@ -7,6 +7,7 @@ on:
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -15,16 +16,18 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 21
-          distribution: 'temurin' # Recommended JDK distribution
+          distribution: 'temurin'
 
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission to gradlew
         run: chmod +x gradlew
 
-      - name: Build plugin JAR
-        run: ./gradlew :core:build -PpluginVersion=${GITHUB_SHA::8} # Build only the core module and inject a short commit hash as plugin version
+      - name: Build shadow JAR with commit-based pluginVersion
+        run: |
+          COMMIT_HASH=$(echo "${GITHUB_SHA}" | cut -c1-8)
+          ./gradlew :core:shadowJar -PpluginVersion=$COMMIT_HASH
 
-      - name: Upload JAR as workflow artifact
+      - name: Upload built plugin
         uses: actions/upload-artifact@v4
         with:
           name: plugin-jar
-          path: core/build/libs/*.jar # Assuming the JAR is in core/build/libs
+          path: core/build/libs/oraxen-*.jar
